@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Reservaciones</title>
+    <style>
+        body {
+            background: url("https://www.maritim.com/fileadmin/_processed_/0/1/csm_Bpa_363_Superior_500a005b62.jpg") no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* Botón centrado */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button-container a {
+            background-color: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .button-container a:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        /* Tabla */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #d1d5db;
+        }
+
+        thead {
+            background-color: #1e40af;
+            color: white;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            text-align: left;
+        }
+
+        tbody tr:hover {
+            background-color: #eff6ff;
+            transition: background-color 0.2s;
+        }
+
+        td.text-center {
+            text-align: center;
+        }
+
+        /* Botones de acción */
+        .btn-editar, .btn-eliminar {
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-block;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 0 5px 5px 0;
+        }
+
+        .btn-editar {
+            background-color: #facc15;
+        }
+
+        .btn-editar:hover {
+            background-color: #eab308;
+            transform: translateY(-1px);
+        }
+
+        .btn-eliminar {
+            background-color: #ef4444;
+        }
+
+        .btn-eliminar:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Reservaciones Registradas</h1>
+
+    <!-- Botón para nueva reservación centrado -->
+    <div class="button-container">
+        <a href="/form/nuevo">+ Nueva Reservación</a>
+        <!-- Botones que son solo para dueño -->
+        <a th:if="${rolUsuario == 'dueno'}" href="/cuartos">+ Nuevo Cuarto</a>
+        <a th:if="${rolUsuario == 'dueno'}" href="/usuarios">+ Nuevo Usuario</a>
+
+        <a href="/login">Cerrar sesión</a>
+    </div>
+
+    <!-- Tabla de reservaciones -->
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Total</th> <!-- Cambiado de Precio a Total -->
+            <th>Número de Habitaciones</th> <!-- Nueva columna -->
+            <th>Tamaño de Habitación</th>
+            <th>Fecha de Nacimiento</th>
+            <th>Fecha de Registro</th>
+            <th class="text-center">Acciones</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="reservacion : ${reservaciones}">
+            <td th:text="${reservacion.idReserva}"></td>
+            <td th:text="${reservacion.cliente.nombre}"></td>
+            <td th:text="${reservacion.cliente.email}"></td>
+            <td th:text="${reservacion.cliente.telefono}"></td>
+
+            <!-- Total calculado: precio * cantidad -->
+            <td th:text="${reservacion.detalleReservacion.cuarto.precio * reservacion.detalleReservacion.cantidad}"></td>
+
+            <!-- Número de habitaciones -->
+            <td th:text="${reservacion.detalleReservacion.cantidad}"></td>
+
+            <td th:text="${reservacion.detalleReservacion.cuarto.tipo}"></td>
+            <td th:text="${reservacion.fechaNacimiento}"></td>
+            <td th:text="${#temporals.format(reservacion.fechaRegistro, 'yyyy-MM-dd HH:mm')}"></td>
+
+            <!-- Botones de acción -->
+            <td class="text-center">
+                <a th:href="@{'/form/editar/' + ${reservacion.idReserva}}" class="btn-editar">Editar</a>
+                <a th:href="@{'/reservaciones/eliminar/' + ${reservacion.idReserva}}"
+                   class="btn-eliminar"
+                   onclick="return confirm('¿Seguro que deseas eliminar esta reservación?');">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+</div>
+
+</body>
+</html>

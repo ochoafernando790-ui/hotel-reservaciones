@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios</title>
+    <style>
+        body { font-family: "Segoe UI", sans-serif; background-color: #f0f4f8; padding: 20px; }
+        h1 { text-align: center; color: #003366; margin-bottom: 20px; }
+
+        .container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+        /* Formulario */
+        .form-container { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 350px; }
+        label { display: block; margin-top: 10px; font-weight: bold; color: #003366; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #aaccee; }
+
+        /* Lista de usuarios */
+        .list-container { background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); flex-grow: 1; min-width: 400px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #aaccee; padding: 8px; text-align: left; }
+        th { background-color: #0077b6; color: #fff; }
+        .actions a { margin-right: 10px; text-decoration: none; padding: 5px 10px; border-radius: 5px; color: #fff; }
+        .actions .edit { background-color: #ffc107; }
+        .actions .edit:hover { background-color: #e0a800; }
+        .actions .delete { background-color: #dc3545; }
+        .actions .delete:hover { background-color: #b02a37; }
+
+        /* Botones del formulario */
+        .button-group {
+            display: flex;
+            gap: 10px; /* espacio entre botones */
+            margin-top: 15px;
+            justify-content: flex-end; /* alineación a la derecha */
+        }
+
+        .button-group button,
+        .button-group a {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        /* Estilo botón Guardar */
+        .button-group button {
+            background-color: #0077b6;
+            color: #fff;
+        }
+        .button-group button:hover {
+            background-color: #005f8a;
+        }
+
+        /* Estilo botón Cancelar */
+        .button-group a {
+            background-color: #cccccc;
+            color: #333;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-group a:hover {
+            background-color: #b3b3b3;
+        }
+
+
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; align-items: center; }
+            .list-container { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Gestión de Usuarios</h1>
+
+<div class="container">
+    <!-- Formulario para nuevo usuario -->
+    <div class="form-container">
+        <form th:action="@{/usuarios}" th:object="${usuario}" method="post">
+            <label for="username">Nombre de usuario:</label>
+            <input type="text" id="username" th:field="*{username}" required>
+
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" id="contrasena" th:field="*{contrasena}" required>
+
+            <label for="rol">Rol:</label>
+            <select id="rol" th:field="*{rol.idRol}" required>
+                <option value="">Seleccione un rol</option>
+                <option th:each="rol : ${roles}" th:value="${rol.idRol}" th:text="${rol.nombreRol}"></option>
+            </select>
+
+            <div class="button-group">
+                <button type="submit">Guardar</button>
+                <a href="/reservaciones">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de usuarios existentes -->
+    <div class="list-container">
+        <h2>Usuarios existentes</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${usuarios}">
+                <td th:text="${u.idUsuario}"></td>
+                <td th:text="${u.username}"></td>
+                <td th:text="${u.rol.nombreRol}"></td>
+                <td class="actions">
+                    <a th:href="@{/usuarios/eliminar/{id}(id=${u.idUsuario})}" class="delete"
+                       onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">Eliminar</a>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

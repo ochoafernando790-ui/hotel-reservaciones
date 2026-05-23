@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Reservación</title>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;}
+        html,body{height:100%;font-family:"Segoe UI",sans-serif;overflow:hidden;}
+        body{
+            background:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80')
+            no-repeat center center/cover;
+            animation:oceanDrift 40s ease-in-out infinite alternate;
+            display:flex;align-items:center;justify-content:center;
+        }
+        @keyframes oceanDrift{0%{background-position:center top;}50%{background-position:center bottom;}100%{background-position:center top;}}
+        .overlay{position:absolute;inset:0;background-color:rgba(0,0,0,0.45);z-index:0;}
+        .form-container{position:relative;z-index:1;background:rgba(255,255,255,0.92);backdrop-filter:blur(6px);
+            border-radius:15px;padding:2rem;width:90%;max-width:420px;box-shadow:0 8px 25px rgba(0,0,0,0.3);}
+        h1{text-align:center;font-size:1.7rem;color:#003366;margin-bottom:1.5rem;}
+        label{display:block;font-weight:600;margin-bottom:5px;color:#003366;}
+        input,select{width:100%;padding:10px;border:1px solid #aaccee;border-radius:8px;margin-bottom:15px;font-size:0.95rem;}
+        input:focus,select:focus{outline:none;border-color:#0088cc;box-shadow:0 0 6px #66c2ff;}
+        .buttons{display:flex;justify-content:flex-end;gap:10px;}
+        button{background-color:#0077b6;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-weight:bold;}
+        button:hover{background-color:#005f8a;}
+        .cancelar{background-color:#cccccc;color:#333;border-radius:8px;padding:10px 20px;text-decoration:none;font-weight:bold;}
+        .cancelar:hover{background-color:#b3b3b3;}
+    </style>
+</head>
+<body>
+<div class="overlay"></div>
+
+<div class="form-container">
+
+    <!-- Mensaje de éxito -->
+    <div th:if="${mensajeExito}" style="background-color:#d4edda;color:#155724;padding:10px;border-radius:5px;margin-bottom:15px;text-align:center;">
+        <p th:text="${mensajeExito}"></p>
+    </div>
+
+    <h1 th:text="${reservacion.idReserva != null ? 'Editar Reservación' : 'Registrar Reservación'}">Registrar Reservación</h1>
+
+    <form th:action="${reservacion.idReserva != null} ? @{/form/editar/{id}(id=${reservacion.idReserva})} : @{/form}"
+          th:object="${reservacion}" method="post">
+        <!-- Cliente -->
+        <label for="nombre">Nombre del cliente</label>
+        <input type="text" id="nombre" th:field="*{cliente.nombre}" placeholder="Digite el nombre" required>
+
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" th:field="*{cliente.email}" placeholder="ejemplo@correo.com" required>
+
+        <input type="text" id="telefono" th:field="*{cliente.telefono}"
+               placeholder="1234-5678" required
+               pattern="\d{4}-\d{4}"
+               title="Ingrese un número de teléfono en formato 1234-5678">
+<!--        sirve para hacer que solo se puedan ingresar 4 digitos de cada lado si agrego ? al guion es opcional-->
+
+        <!-- Cuarto -->
+        <label for="cuarto">Tipo de habitación</label>
+        <select id="cuarto" name="cuartoId" required th:onchange="calcularTotal()">
+            <option value="" disabled th:selected="${reservacion.detalleReservacion == null}">Seleccione el tipo de habitación</option>
+            <option th:each="cuarto : ${cuartos}" th:value="${cuarto.idCuarto}"
+                    th:text="${cuarto.tipo + ' - $' + cuarto.precio}"
+                    th:selected="${reservacion.detalleReservacion != null} ? ${cuarto.idCuarto} == ${reservacion.detalleReservacion.cuarto.idCuarto} : false">
+            </option>
+        </select>
+
+        <!-- Cantidad -->
+        <label for="cantidad">Número de habitaciones</label>
+        <input type="number" id="cantidad" name="cantidad" min="1" value="1" required
+               th:value="${reservacion.detalleReservacion != null} ? ${reservacion.detalleReservacion.cantidad} : 1"
+               th:oninput="calcularTotal()">
+
+        <!-- Total -->
+        <label for="total">Total</label>
+        <input type="text" id="total" readonly placeholder="$0.00"
+               th:value="${reservacion.detalleReservacion != null} ? '$' + ${reservacion.detalleReservacion.total} : '$0.00'">
+
+        <!-- Fecha de nacimiento -->
+        <label for="fechaNacimiento">Fecha de nacimiento</label>
+        <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}"
+               required
+               max="" title="Debe tener al menos 18 años">
+
+
+        <div class="buttons">
+            <button type="submit" th:text="${reservacion.idReserva != null ? 'Actualizar' : 'Guardar'}">Guardar</button>
+            <a th:href="@{/reservaciones}" class="cancelar">Cancelar</a>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    // Calcula la fecha máxima para que la persona tenga al menos 18 años
+    const fechaNacimientoInput = document.getElementById('fechaNacimiento');
+    const hoy = new Date();
+    const año18 = hoy.getFullYear() - 18;
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0'); // Mes empieza desde 0
+    const dia = String(hoy.getDate()).padStart(2, '0');
+
+    const fechaMaxima = `${año18}-${mes}-${dia}`;
+    fechaNacimientoInput.max = fechaMaxima;
+</script>
+
+
+<script>
+    function calcularTotal() {
+        const select = document.getElementById('cuarto');
+        const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
+        const totalInput = document.getElementById('total');
+        const precio = select.options[select.selectedIndex]?.text.split('$')[1];
+        totalInput.value = precio ? '$' + (parseFloat(precio) * cantidad).toFixed(2) : '$0.00';
+    }
+
+    // Calcular total si ya hay un valor seleccionado al cargar
+    window.onload = calcularTotal;
+</script>
+
+</body>
+</html>
